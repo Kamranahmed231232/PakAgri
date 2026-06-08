@@ -140,24 +140,25 @@ function YieldTrendChart({ history }: { history: Prediction[] }) {
     )
   }
 
-  const maxYield = Math.max(...recentYields.map(d => d.yield))
-  const minYield = Math.min(...recentYields.map(d => d.yield))
+  const maxYield = Math.max(...recentYields.map(d => d.yield), 1)
 
   return (
-    <div className="h-48 flex items-end gap-2">
+    <div className="w-full h-48 flex items-end justify-center gap-3 px-2">
       {recentYields.map((data, index) => {
-        const height = maxYield > 0 ? (data.yield / maxYield) * 100 : 10
+        const heightPercent = (data.yield / maxYield) * 100
         return (
-          <div key={index} className="flex-1 flex flex-col items-center gap-1">
-            <div
-              className="w-full bg-gradient-to-t from-pakagri-primary to-pakagri-gold rounded-t-lg transition-all duration-500 hover:from-pakagri-gold hover:to-pakagri-gold-light cursor-pointer group relative"
-              style={{ height: `${Math.max(height, 5)}%` }}
-            >
-              <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-pakagri-primary text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-                {data.yield.toFixed(0)} kg
+          <div key={index} className="flex-1 flex flex-col items-center gap-2 min-w-[40px]">
+            <div className="relative w-full flex items-end justify-center h-32">
+              <div
+                className="w-10 bg-gradient-to-t from-pakagri-primary to-pakagri-gold rounded-t-lg transition-all duration-700 hover:from-pakagri-gold hover:to-pakagri-gold-light cursor-pointer group relative shadow-md"
+                style={{ height: `${Math.max(heightPercent, 8)}%` }}
+              >
+                <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-pakagri-primary text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 font-semibold">
+                  {data.yield.toFixed(0)} kg
+                </div>
               </div>
             </div>
-            <span className="text-xs text-pakagri-earth">Day {data.day}</span>
+            <span className="text-xs text-pakagri-earth font-medium">Day {data.day}</span>
           </div>
         )
       })}
@@ -336,36 +337,8 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-pakagri-cream">
-      {/* Header */}
-      <header className="bg-pakagri-primary text-white py-6 sticky top-0 z-50 shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Wheat className="w-8 h-8 text-pakagri-gold" />
-              <div>
-                <h1 className="font-display text-2xl">Kissan Dashboard</h1>
-                <p className="font-urdu text-pakagri-gold text-sm">کسان ڈیش بورڈ</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="hidden md:flex items-center gap-2 text-pakagri-cream text-sm">
-                <MapPin className="w-4 h-4" />
-                <span>{user.user_metadata?.farm_location || 'Pakistan'}</span>
-              </div>
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-2 bg-pakagri-gold/20 px-4 py-2 rounded-lg text-pakagri-gold hover:bg-pakagri-gold/30 transition-colors"
-              >
-                <LogOut className="w-4 h-4" />
-                <span className="hidden sm:inline">Logout</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
       {/* Tab Navigation */}
-      <div className="bg-white border-b border-pakagri-cream-dark sticky top-[72px] z-40">
+      <div className="bg-white border-b border-pakagri-cream-dark sticky top-16 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex gap-1">
             {[
