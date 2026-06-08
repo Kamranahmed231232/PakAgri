@@ -1,12 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { Wheat, Mail, Lock, Eye, EyeOff, User, MapPin, Check, X } from 'lucide-react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Wheat, Mail, Lock, Eye, EyeOff, User, MapPin, Check, X, CheckCircle } from 'lucide-react'
 import { useAuth } from '@/lib/supabase/auth-context'
+import { supabase } from '@/lib/supabase/client'
 
-export default function RegisterPage() {
+function RegisterContent() {
   const [formData, setFormData] = useState({
     full_name: '',
     email: '',
@@ -20,6 +21,10 @@ export default function RegisterPage() {
   const [success, setSuccess] = useState(false)
   const { signUp } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  // Check if user just verified their email
+  const justVerified = searchParams.get('verified') === 'true'
 
   const passwordValidation = {
     length: formData.password.length >= 6,
@@ -44,7 +49,12 @@ export default function RegisterPage() {
     const { error } = await signUp(formData.email, formData.password, formData.full_name, formData.farm_location)
 
     if (error) {
-      setError(error.message)
+      // Handle specific error messages
+      if (error.message.includes('already registered') || error.message.includes('already exists')) {
+        setError('An account with this email already exists. Please try logging in instead.')
+      } else {
+        setError(error.message)
+      }
     } else {
       setSuccess(true)
     }
@@ -59,15 +69,31 @@ export default function RegisterPage() {
         <div className="relative w-full max-w-md">
           <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-pakagri-gold rounded-xl mb-4">
-              <Check className="w-8 h-8 text-white" />
+              <Mail className="w-8 h-8 text-white" />
             </div>
             <h1 className="font-display text-2xl text-pakagri-primary mb-4">Check Your Email</h1>
             <p className="text-pakagri-earth mb-6">
-              We&apos;ve sent a confirmation email to <strong>{formData.email}</strong>.
-              Please click the link in the email to activate your account.
+              We&apos;ve sent a confirmation email to <strong className="text-pakagri-primary">{formData.email}</strong>.
             </p>
+            <div className="bg-pakagri-cream rounded-lg p-4 mb-6 text-left">
+              <p className="text-sm text-pakagri-earth-dark font-medium mb-2">What to do next:</p>
+              <ol className="text-sm text-pakagri-earth space-y-2">
+                <li className="flex items-start gap-2">
+                  <span className="w-5 h-5 bg-pakagri-gold rounded-full flex items-center justify-center text-pakagri-primary-dark text-xs font-bold flex-shrink-0 mt-0.5">1</span>
+                  <span>Open your email inbox</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="w-5 h-5 bg-pakagri-gold rounded-full flex items-center justify-center text-pakagri-primary-dark text-xs font-bold flex-shrink-0 mt-0.5">2</span>
+                  <span>Find the email from PakAgri</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="w-5 h-5 bg-pakagri-gold rounded-full flex items-center justify-center text-pakagri-primary-dark text-xs font-bold flex-shrink-0 mt-0.5">3</span>
+                  <span>Click the verification link to activate your account</span>
+                </li>
+              </ol>
+            </div>
             <Link href="/login" className="btn-gold inline-block px-8 py-3">
-              Back to Login
+              Go to Login
             </Link>
           </div>
         </div>
@@ -89,7 +115,18 @@ export default function RegisterPage() {
             <p className="font-urdu text-pakagri-gold mt-1">کسان کے طور پر شامل ہوں</p>
           </div>
 
-          {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">{error}</div>}
+          {justVerified && (
+            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6 flex items-center gap-2">
+              <CheckCircle className="w-5 h-5" />
+              Your email has been verified! You can now log in.
+            </div>
+          )}
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+              {error}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
@@ -168,8 +205,18 @@ export default function RegisterPage() {
             </div>
 
             <button type="submit" disabled={isLoading || !passwordValidation.length || !passwordValidation.match}
-              className="btn-gold w-full py-4 text-lg disabled:opacity-50 disabled:cursor-not-allowed">
-              {isLoading ? 'Creating account...' : <>Register <span className="font-urdu font-normal text-sm ml-2">(رجسٹر)</span></>}
+              className="btn-gold w-full py-4 text-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+              {isLoading ? (
+                <>
+                  <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  Creating account...
+                </>
+              ) : (
+                <>Register <span className="font-urdu font-normal text-sm ml-2">(رجسٹر)</span></>
+              )}
             </button>
           </form>
 
@@ -183,5 +230,17 @@ export default function RegisterPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-hero flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-4 border-pakagri-gold border-t-transparent rounded-full" />
+      </div>
+    }>
+      <RegisterContent />
+    </Suspense>
   )
 }
